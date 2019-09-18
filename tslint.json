@@ -1,8 +1,6 @@
 {
-  "defaultSeverity": "error",
-  "extends": [
-      "@ephox/tslint-rules/tslint.json"
-  ],
+  "defaultSeverity": "warning",
+  "extends": ["@ephox/tslint-rules/tslint.json"],
   "jsRules": {},
   "rules": {},
   "rulesDirectory": []
