@@ -1,2 +1,3 @@
-# paste-it-cleaned-tiny
-TinyMCE plugin for "paste-it-clean" server-side Office/Website HTML cleaner
+# pasteItCleanedTiny TinyMCE Plugin
+
+Welcome stranger! This is a repo containing the pasteItCleanedTiny TinyMCE plugin.
