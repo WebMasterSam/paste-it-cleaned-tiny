@@ -1,24 +1,39 @@
 import { window } from "@ephox/dom-globals"
+import { callBackendClean } from "./CallBackend"
 
 export const handlePaste = (event: any, editor: any) => {
-  const html = getHtmlFromClipboard(event)
-  const htmlCleaned = cleanHtmlOnBackend(html)
+  const htmlRaw = getHtmlFromClipboard(event)
 
-  // add backend response handling, errors, etc. paste default when backend fails... display warning message overlay
   cancelBubble(event)
-  replaceSelection(editor, htmlCleaned)
+
+  cleanHtmlOnBackend(
+    htmlRaw,
+    htmlCleaned => {
+      replaceSelection(editor, htmlCleaned)
+    },
+    () => {
+      replaceSelection(editor, htmlRaw)
+      //display warning message overlay
+    }
+  )
 }
 
 const getHtmlFromClipboard = (event: any) => {
-  let pasteAsHtml = (
+  const pasteAsHtml = (
     event.clipboardData || (window as any).clipboardData
   ).getData("text/html")
-
-  return pasteAsHtml
+  const pasteAsText = (
+    event.clipboardData || (window as any).clipboardData
+  ).getData("text")
+  return pasteAsHtml || pasteAsText
 }
 
-const cleanHtmlOnBackend = (html: string) => {
-  return "<p>Cleaneeddd from backend !!</p>" + html
+const cleanHtmlOnBackend = (
+  html: string,
+  success: (htmlCleaned: string) => void,
+  error: () => void
+) => {
+  return callBackendClean(html, success, error)
 }
 
 const replaceSelection = (editor: any, htmlCleaned: string) => {
