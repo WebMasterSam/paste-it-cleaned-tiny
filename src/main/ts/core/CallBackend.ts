@@ -11,7 +11,7 @@ export const callBackendClean = (
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*"
     },
-    mode: "cors", // no-cors, cors, *same-origin
+    mode: "cors",
     cache: "no-cache",
     body: JSON.stringify({ value: input })
   })
@@ -25,6 +25,26 @@ export const callBackendClean = (
     })
 }
 
+export const callBackendNotify = (pasteType: string) => {
+  fetch(endpointNotify(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    },
+    mode: "cors",
+    cache: "no-cache",
+    body: JSON.stringify({ pasteType: pasteType })
+  })
+    .then(res => res.text())
+    .then()
+    .catch()
+}
+
 export function endpointClean() {
-  return backend.endPoint
+  return backend.endPointClean
+}
+
+export function endpointNotify() {
+  return backend.endPointNotify
 }
