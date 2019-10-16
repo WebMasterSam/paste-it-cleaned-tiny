@@ -3,23 +3,26 @@ import { callBackendClean, callBackendNotify } from "./CallBackend"
 
 export const handlePaste = (event: any, editor: any) => {
   cancelBubble(event)
+  handlePasteImage(event, editor)
   handlePasteHtml(event, editor)
   handlePasteText(event, editor)
-  handlePasteImage(event, editor)
 }
 
 export const handlePasteHtml = (event: any, editor: any) => {
   const htmlRaw = getHtmlFromClipboard(event)
   const textRaw = getTextFromClipboard(event)
+  const rtfRaw = getRtfFromClipboard(event)
 
   if (htmlRaw && textRaw != htmlRaw) {
     cleanHtmlOnBackend(
       htmlRaw,
+      rtfRaw,
+      true,
       htmlCleaned => {
-        replaceImagesWithDataUri(editor, htmlCleaned)
+        replaceSelection(editor, htmlCleaned)
       },
       () => {
-        replaceImagesWithDataUri(editor, htmlRaw)
+        replaceSelection(editor, htmlRaw)
         //display warning message overlay, 2s display
       }
     )
@@ -32,7 +35,7 @@ export const handlePasteText = (event: any, editor: any) => {
 
   if (textRaw && (!htmlRaw || textRaw === htmlRaw)) {
     replaceSelection(editor, textRaw)
-    callBackendNotify("text")
+    callBackendNotify("text", textRaw)
   }
 }
 
@@ -43,7 +46,7 @@ export const handlePasteImage = (event: any, editor: any) => {
   if (!htmlRaw && !textRaw) {
     getImageFromClipboard(event, imgTag => {
       replaceSelection(editor, imgTag)
-      callBackendNotify("image")
+      callBackendNotify("image", imgTag)
     })
   }
 }
@@ -71,6 +74,13 @@ const getTextFromClipboard = (event: any) => {
   return pasteAsText
 }
 
+const getRtfFromClipboard = (event: any) => {
+  const data = getClipboardData(event)
+  const pasteAsRtf = data.getData("text/rtf")
+
+  return pasteAsRtf
+}
+
 const getImageFromClipboard = (event: any, cb: (imgTag: string) => void) => {
   const data = getClipboardData(event)
 
@@ -95,10 +105,12 @@ const getImageFromClipboard = (event: any, cb: (imgTag: string) => void) => {
 
 const cleanHtmlOnBackend = (
   html: string,
+  rtf: string,
+  keepStyles: boolean,
   success: (htmlCleaned: string) => void,
   error: () => void
 ) => {
-  return callBackendClean(html, success, error)
+  return callBackendClean(html, rtf, keepStyles, success, error)
 }
 
 const replaceSelection = (editor: any, htmlCleaned: string) => {
@@ -107,27 +119,4 @@ const replaceSelection = (editor: any, htmlCleaned: string) => {
 
 const cancelBubble = (event: any) => {
   event.preventDefault()
-}
-
-const replaceImagesWithDataUri = (editor: any, htmlCleaned: string) => {
-  const toDataURL = url =>
-    fetch(url)
-      .then(response => response.blob())
-      .then(
-        blob =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onloadend = () => resolve(reader.result)
-            reader.onerror = reject
-            reader.readAsDataURL(blob)
-          })
-      )
-
-  toDataURL(
-    "https://www.gravatar.com/avatar/d50c83cc0c6523b4d3f6085295c953e0"
-  ).then(dataUrl => {
-    console.log("RESULT:", dataUrl)
-    const htmlWithImageUri = htmlCleaned
-    replaceSelection(editor, htmlWithImageUri)
-  })
 }

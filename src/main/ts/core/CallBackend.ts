@@ -1,7 +1,9 @@
 import { backend } from "../../../configs/backend"
 
 export const callBackendClean = (
-  input: string,
+  html: string,
+  rtf: string,
+  keepStyles: boolean,
   success: (html: string) => void,
   error: () => void
 ) => {
@@ -15,19 +17,23 @@ export const callBackendClean = (
     },
     mode: "cors",
     cache: "no-cache",
-    body: JSON.stringify({ value: input })
+    body: JSON.stringify({
+      html: html,
+      rtf: rtf,
+      hash: getHashCode(html),
+      keepStyles: keepStyles
+    })
   })
     .then(res => res.json())
     .then(t => {
       success(t.content)
     })
     .catch(e => {
-      console.log(e)
       error()
     })
 }
 
-export const callBackendNotify = (pasteType: string) => {
+export const callBackendNotify = (pasteType: string, content: string) => {
   fetch(endpointNotify(), {
     method: "POST",
     headers: {
@@ -38,7 +44,7 @@ export const callBackendNotify = (pasteType: string) => {
     },
     mode: "cors",
     cache: "no-cache",
-    body: JSON.stringify({ pasteType: pasteType })
+    body: JSON.stringify({ pasteType: pasteType, hash: getHashCode(content) })
   })
     .then(res => res.json())
     .then()
@@ -95,4 +101,20 @@ function getConfig() {
   }
 
   return ""
+}
+
+function getHashCode(str) {
+  var hash = 0,
+    i,
+    chr
+
+  if (str.length === 0) return hash.toString()
+
+  for (i = 0; i < str.length; i++) {
+    chr = str.charCodeAt(i)
+    hash = (hash << 5) - hash + chr
+    hash |= 0 // Convert to 32bit integer
+  }
+
+  return hash.toString()
 }
