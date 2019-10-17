@@ -1,5 +1,8 @@
 import { window } from "@ephox/dom-globals"
+import { displayKeepStylesConfirm } from "../Helpers/ConfirmHelper"
 import { callBackendClean, callBackendNotify } from "./CallBackend"
+import * as overlayHelper from "../Helpers/OverlayHelper"
+import * as alertHelper from "../Helpers/AlertHelper"
 
 export const handlePaste = (event: any, editor: any) => {
   cancelBubble(event)
@@ -14,18 +17,27 @@ export const handlePasteHtml = (event: any, editor: any) => {
   const rtfRaw = getRtfFromClipboard(event)
 
   if (htmlRaw && textRaw != htmlRaw) {
-    cleanHtmlOnBackend(
-      htmlRaw,
-      rtfRaw,
-      true,
-      htmlCleaned => {
-        replaceSelection(editor, htmlCleaned)
-      },
-      () => {
-        replaceSelection(editor, htmlRaw)
-        //display warning message overlay, 2s display
-      }
-    )
+    displayKeepStylesConfirm(editor, (editor, keepStyles) => {
+      alertHelper.hideAlert(editor)
+      overlayHelper.displayWaitingOverlay(editor)
+      cleanHtmlOnBackend(
+        htmlRaw,
+        rtfRaw,
+        keepStyles,
+        (htmlCleaned, exception) => {
+          replaceSelection(editor, htmlCleaned)
+          overlayHelper.hideWaitingOverlay(editor)
+          if (exception != "" && exception != undefined && exception != null) {
+            alertHelper.displayAlert(editor, exception)
+          }
+        },
+        () => {
+          replaceSelection(editor, htmlRaw)
+          overlayHelper.hideWaitingOverlay(editor)
+          alertHelper.displayFailureAlert(editor)
+        }
+      )
+    })
   }
 }
 
@@ -107,7 +119,7 @@ const cleanHtmlOnBackend = (
   html: string,
   rtf: string,
   keepStyles: boolean,
-  success: (htmlCleaned: string) => void,
+  success: (htmlCleaned: string, exception: string) => void,
   error: () => void
 ) => {
   return callBackendClean(html, rtf, keepStyles, success, error)

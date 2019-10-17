@@ -4,7 +4,7 @@ export const callBackendClean = (
   html: string,
   rtf: string,
   keepStyles: boolean,
-  success: (html: string) => void,
+  success: (html: string, exception: string) => void,
   error: () => void
 ) => {
   fetch(endpointClean(), {
@@ -26,7 +26,7 @@ export const callBackendClean = (
   })
     .then(res => res.json())
     .then(t => {
-      success(t.content)
+      success(t.content, t.exception)
     })
     .catch(e => {
       error()
