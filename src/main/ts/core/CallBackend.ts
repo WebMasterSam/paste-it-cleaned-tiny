@@ -1,13 +1,7 @@
 import { backend } from "../../../configs/backend"
 
-export const callBackendClean = (
-  html: string,
-  rtf: string,
-  keepStyles: boolean,
-  success: (html: string, exception: string) => void,
-  error: () => void
-) => {
-  fetch(endpointClean(), {
+export const callBackendClean = (html: string, rtf: string, keepStyles: boolean, culture: string, success: (html: string, exception: string) => void, error: () => void) => {
+  fetch(endpointClean(culture), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -33,8 +27,8 @@ export const callBackendClean = (
     })
 }
 
-export const callBackendNotify = (pasteType: string, content: string) => {
-  fetch(endpointNotify(), {
+export const callBackendNotify = (pasteType: string, content: string, culture: string) => {
+  fetch(endpointNotify(culture), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -51,12 +45,12 @@ export const callBackendNotify = (pasteType: string, content: string) => {
     .catch()
 }
 
-export function endpointClean() {
-  return backend.endPointClean
+export function endpointClean(culture: string) {
+  return backend.endPointClean + "?culture=" + culture
 }
 
-export function endpointNotify() {
-  return backend.endPointNotify
+export function endpointNotify(culture: string) {
+  return backend.endPointNotify + "?culture=" + culture
 }
 
 function getApiKey() {

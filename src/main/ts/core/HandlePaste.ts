@@ -3,6 +3,7 @@ import { displayKeepStylesConfirm } from "../Helpers/ConfirmHelper"
 import { callBackendClean, callBackendNotify } from "./CallBackend"
 import * as overlayHelper from "../Helpers/OverlayHelper"
 import * as alertHelper from "../Helpers/AlertHelper"
+import * as textHelper from "../Helpers/TextHelper"
 
 export const handlePaste = (event: any, editor: any) => {
   cancelBubble(event)
@@ -15,6 +16,7 @@ export const handlePasteHtml = (event: any, editor: any) => {
   const htmlRaw = getHtmlFromClipboard(event)
   const textRaw = getTextFromClipboard(event)
   const rtfRaw = getRtfFromClipboard(event)
+  const culture = textHelper.getLocale(editor)
 
   if (htmlRaw && textRaw != htmlRaw) {
     displayKeepStylesConfirm(editor, (editor, keepStyles) => {
@@ -23,6 +25,7 @@ export const handlePasteHtml = (event: any, editor: any) => {
       cleanHtmlOnBackend(
         htmlRaw,
         rtfRaw,
+        culture,
         keepStyles,
         (htmlCleaned, exception) => {
           replaceSelection(editor, htmlCleaned)
@@ -44,30 +47,29 @@ export const handlePasteHtml = (event: any, editor: any) => {
 export const handlePasteText = (event: any, editor: any) => {
   const htmlRaw = getHtmlFromClipboard(event)
   const textRaw = getTextFromClipboard(event)
+  const culture = textHelper.getLocale(editor)
 
   if (textRaw && (!htmlRaw || textRaw === htmlRaw)) {
     replaceSelection(editor, textRaw)
-    callBackendNotify("text", textRaw)
+    callBackendNotify("text", textRaw, culture)
   }
 }
 
 export const handlePasteImage = (event: any, editor: any) => {
   const htmlRaw = getHtmlFromClipboard(event)
   const textRaw = getTextFromClipboard(event)
+  const culture = textHelper.getLocale(editor)
 
   if (!htmlRaw && !textRaw) {
     getImageFromClipboard(event, imgTag => {
       replaceSelection(editor, imgTag)
-      callBackendNotify("image", imgTag)
+      callBackendNotify("image", imgTag, culture)
     })
   }
 }
 
 const getClipboardData = (event: any) => {
-  const data =
-    event.clipboardData ||
-    (window as any).clipboardData ||
-    event.originalEvent.clipboardData
+  const data = event.clipboardData || (window as any).clipboardData || event.originalEvent.clipboardData
 
   return data
 }
@@ -115,14 +117,8 @@ const getImageFromClipboard = (event: any, cb: (imgTag: string) => void) => {
   }
 }
 
-const cleanHtmlOnBackend = (
-  html: string,
-  rtf: string,
-  keepStyles: boolean,
-  success: (htmlCleaned: string, exception: string) => void,
-  error: () => void
-) => {
-  return callBackendClean(html, rtf, keepStyles, success, error)
+const cleanHtmlOnBackend = (html: string, rtf: string, culture: string, keepStyles: boolean, success: (htmlCleaned: string, exception: string) => void, error: () => void) => {
+  return callBackendClean(html, rtf, keepStyles, culture, success, error)
 }
 
 const replaceSelection = (editor: any, htmlCleaned: string) => {
