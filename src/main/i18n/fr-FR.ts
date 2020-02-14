@@ -3,6 +3,7 @@ export const t = {
     resources: {
         'editor.overlay.processing': 'Traitement du contenu, veuillez patienter...',
         'editor.alert.failure': "Une erreur s'est produite lors du coller. Veuillez contacter le support.",
+        'editor.alert.requesTooLong': 'Le contenu actuel du presse-papier est trop gros pour être géré par le plugin. Veuillez copier une plus petite portion de texte, choisir des images plus petites, etc.',
         'editor.alert.images': "Des images n'ont pas pu être incluses.",
 
         'editor.confirm.keepStyles.title': 'Mise en forme du collage',
