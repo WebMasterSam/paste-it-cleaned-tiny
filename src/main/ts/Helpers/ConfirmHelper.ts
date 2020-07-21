@@ -1,8 +1,8 @@
-import * as textHelper from "./TextHelper"
+import * as textHelper from './TextHelper'
 
-let overlayDiv = document.createElement("div")
-let confirmDiv = document.createElement("div")
-let stylesNode = document.createElement("style")
+let overlayDiv = document.createElement('div')
+let confirmDiv = document.createElement('div')
+let stylesNode = document.createElement('style')
 let overlayDivAppended = false
 let actualScroll = null
 
@@ -71,116 +71,103 @@ const styles = `
 `
 
 interface Button {
-  type: string
-  label: string
-  fn: (editor: any) => void
+    type: string
+    label: string
+    fn: (editor: any) => void
 }
 
-export const displayKeepStylesConfirm = (
-  editor: any,
-  cb: (editor, keepStyles) => void
-) => {
-  const buttons = [
-    {
-      type: "primary",
-      label: "editor.confirm.keepStyles.keep",
-      fn: editor => {
-        hideConfirm(editor)
-        cb(editor, true)
-      }
-    },
-    {
-      type: "normal",
-      label: "editor.confirm.keepStyles.discard",
-      fn: editor => {
-        hideConfirm(editor)
-        cb(editor, false)
-      }
-    }
-  ]
-  displayConfirm(
-    editor,
-    "editor.confirm.keepStyles.title",
-    "editor.confirm.keepStyles.body",
-    buttons
-  )
+export const displayKeepStylesConfirm = (editor: any, cb: (editor, keepStyles) => void) => {
+    const buttons = [
+        {
+            type: 'primary',
+            label: 'editor.confirm.keepStyles.keep',
+            fn: editor => {
+                hideConfirm(editor)
+                cb(editor, true)
+            },
+        },
+        {
+            type: 'normal',
+            label: 'editor.confirm.keepStyles.discard',
+            fn: editor => {
+                hideConfirm(editor)
+                cb(editor, false)
+            },
+        },
+    ]
+    displayConfirm(editor, 'editor.confirm.keepStyles.title', 'editor.confirm.keepStyles.body', buttons)
 }
 
-export const displayConfirm = (
-  editor: any,
-  title: string,
-  body: string,
-  buttons: Button[]
-) => {
-  var width = window.innerWidth
-  var height = window.innerHeight
-  var titleText = textHelper.getText(editor, title)
-  var bodyText = textHelper.getText(editor, body)
-  var buttonsHtml = ""
-  var fnAssigns = []
+export const displayConfirm = (editor: any, title: string, body: string, buttons: Button[]) => {
+    var width = window.innerWidth
+    var height = window.innerHeight
+    var titleText = textHelper.getText(editor, title)
+    var bodyText = textHelper.getText(editor, body)
+    var buttonsHtml = ''
+    var fnAssigns = []
+    var dialogWidth = Math.min(500, width * 0.9)
 
-  buttons.forEach(b => {
-    var text = textHelper.getText(editor, b.label)
-    var type = b.type
-    var className = "paste-it-cleaned-button paste-it-cleaned-button-" + type
-    var id = `paste-it-cleaned-confirm-button-${b.type}-${b.label}`
+    buttons.forEach(b => {
+        var text = textHelper.getText(editor, b.label)
+        var type = b.type
+        var className = 'paste-it-cleaned-button paste-it-cleaned-button-' + type
+        var id = `paste-it-cleaned-confirm-button-${b.type}-${b.label}`
 
-    buttonsHtml =
-      buttonsHtml + `<button id='${id}' class='${className}'>${text}</button>`
+        buttonsHtml = buttonsHtml + `<button id='${id}' class='${className}'>${text}</button>`
 
-    fnAssigns.push(ed => {
-      document.getElementById(id).onclick = () => b.fn(ed)
+        fnAssigns.push(ed => {
+            document.getElementById(id).onclick = () => b.fn(ed)
+        })
     })
-  })
 
-  if (!overlayDivAppended) {
-    stylesNode.innerHTML = styles
-    stylesNode.type = "text/css"
-    window.document.head.appendChild(stylesNode)
-    window.document.body.appendChild(overlayDiv)
-    window.document.body.appendChild(confirmDiv)
-    actualScroll = window.document.body.style.overflow
-    overlayDivAppended = true
-  }
+    if (!overlayDivAppended) {
+        stylesNode.innerHTML = styles
+        stylesNode.type = 'text/css'
+        window.document.head.appendChild(stylesNode)
+        window.document.body.appendChild(overlayDiv)
+        window.document.body.appendChild(confirmDiv)
+        actualScroll = window.document.body.style.overflow
+        overlayDivAppended = true
+    }
 
-  // ----------------------------------------------------------
-  // Body
-  // ----------------------------------------------------------
-  window.document.body.style.overflow = "hidden"
+    // ----------------------------------------------------------
+    // Body
+    // ----------------------------------------------------------
+    window.document.body.style.overflow = 'hidden'
 
-  // ----------------------------------------------------------
-  // Background overlay
-  // ----------------------------------------------------------
-  overlayDiv.className = "paste-it-cleaned-overlay"
+    // ----------------------------------------------------------
+    // Background overlay
+    // ----------------------------------------------------------
+    overlayDiv.className = 'paste-it-cleaned-overlay'
 
-  overlayDiv.style.display = "block"
-  overlayDiv.style.width = width + "px"
-  overlayDiv.style.height = height + "px"
-  overlayDiv.style.opacity = `0.75`
+    overlayDiv.style.display = 'block'
+    overlayDiv.style.width = width + 'px'
+    overlayDiv.style.height = height + 'px'
+    overlayDiv.style.opacity = `0.75`
 
-  // ----------------------------------------------------------
-  // Confirm div
-  // ----------------------------------------------------------
+    // ----------------------------------------------------------
+    // Confirm div
+    // ----------------------------------------------------------
 
-  confirmDiv.className = "paste-it-cleaned-alert"
+    confirmDiv.className = 'paste-it-cleaned-alert'
 
-  confirmDiv.style.display = "block"
-  confirmDiv.style.width = "500px"
+    confirmDiv.style.display = 'block'
+    confirmDiv.style.width = dialogWidth + 'px'
 
-  confirmDiv.innerHTML = `
+    confirmDiv.innerHTML = `
   <div class="paste-it-cleaned-section paste-it-cleaned-header">${titleText}</div>
   <div class="paste-it-cleaned-section paste-it-cleaned-body">${bodyText}</div>
   <div class="paste-it-cleaned-section paste-it-cleaned-buttons">${buttonsHtml}</div>
   `
 
-  confirmDiv.style.top = height / 2 - confirmDiv.offsetHeight / 2 + "px"
-  confirmDiv.style.left = width / 2 - 250 + "px"
+    confirmDiv.style.top = height / 2 - confirmDiv.offsetHeight / 2 + 'px'
+    confirmDiv.style.left = width / 2 - dialogWidth / 2 + 'px'
 
-  fnAssigns.forEach(fn => fn(editor))
+    fnAssigns.forEach(fn => fn(editor))
 }
 
 export const hideConfirm = (editor: any) => {
-  overlayDiv.style.display = "none"
-  confirmDiv.style.display = "none"
-  window.document.body.style.overflow = actualScroll
+    overlayDiv.style.display = 'none'
+    confirmDiv.style.display = 'none'
+    window.document.body.style.overflow = actualScroll
 }

@@ -5,7 +5,7 @@ import * as overlayHelper from '../Helpers/OverlayHelper'
 import * as alertHelper from '../Helpers/AlertHelper'
 import * as textHelper from '../Helpers/TextHelper'
 
-const MAX_REQUEST_SIZE = 5 * 1024 * 1024
+const MAX_REQUEST_SIZE = 5 * 1024 * 1024 // 5 MB
 
 export const handlePaste = (event: any, editor: any) => {
     cancelBubble(event)
@@ -28,7 +28,7 @@ export const handlePasteHtmlRtf = (event: any, editor: any) => {
             console.log('Clipboard request size: ' + (rtfRaw.length + htmlRaw.length) / 1024 + 'KB')
             displayKeepStylesConfirm(editor, (editor, keepStyles) => {
                 alertHelper.hideAlert(editor)
-                overlayHelper.displayWaitingOverlay(editor)
+                overlayHelper.displayProcessingMessage(editor)
                 cleanHtmlOnBackend(
                     htmlRaw,
                     rtfRaw,
@@ -36,14 +36,14 @@ export const handlePasteHtmlRtf = (event: any, editor: any) => {
                     keepStyles,
                     (htmlCleaned, exception) => {
                         replaceSelection(editor, htmlCleaned)
-                        overlayHelper.hideWaitingOverlay(editor)
+                        overlayHelper.hideMessage(editor)
                         if (exception != '' && exception != undefined && exception != null) {
                             alertHelper.displayAlert(editor, exception)
                         }
                     },
                     () => {
                         replaceSelection(editor, htmlRaw)
-                        overlayHelper.hideWaitingOverlay(editor)
+                        overlayHelper.hideMessage(editor)
                         alertHelper.displayFailureAlert(editor)
                     }
                 )
@@ -59,7 +59,8 @@ export const handlePasteText = (event: any, editor: any) => {
     const culture = textHelper.getLocale(editor)
 
     if (textRaw && (!htmlRaw || textRaw === htmlRaw) && (!rtfRaw || textRaw === rtfRaw)) {
-        replaceSelection(editor, textRaw)
+        //console.log(textRaw)
+        replaceSelection(editor, textRaw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\r\n/g, '<br />').replace(/\r/g, '<br />').replace(/\n/g, '<br />'))
         callBackendNotify('text', textRaw, culture)
     }
 }
@@ -78,6 +79,9 @@ export const handlePasteImage = (event: any, editor: any) => {
 }
 
 const getClipboardData = (event: any) => {
+    console.log('event.clipboardData', event.clipboardData)
+    console.log('(window as any).clipboardData', (window as any).clipboardData)
+    event.originalEvent && console.log('event.originalEvent.clipboardData', event.originalEvent.clipboardData)
     const data = event.clipboardData || (window as any).clipboardData || event.originalEvent.clipboardData
 
     return data
@@ -114,7 +118,7 @@ const getImageFromClipboard = (event: any, cb: (imgTag: string) => void) => {
             var blob = item.getAsFile()
             var reader = new FileReader()
 
-            reader.onload = function(event) {
+            reader.onload = function (event) {
                 var imageData = event.target.result as string
                 var imgTag = `<img src="${imageData}" />`
 

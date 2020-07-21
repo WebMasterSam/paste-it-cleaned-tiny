@@ -1,4 +1,4 @@
-import { backend } from '../../../configs/backend'
+import { backend, notifyEnabled } from '../../../configs/backend'
 
 export const callBackendClean = (html: string, rtf: string, keepStyles: boolean, culture: string, success: (html: string, exception: string) => void, error: () => void) => {
     fetch(endpointClean(culture), {
@@ -28,21 +28,23 @@ export const callBackendClean = (html: string, rtf: string, keepStyles: boolean,
 }
 
 export const callBackendNotify = (pasteType: string, content: string, culture: string) => {
-    fetch(endpointNotify(culture), {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            ApiKey: getApiKey(),
-            Config: getConfig(),
-        },
-        mode: 'cors',
-        cache: 'no-cache',
-        body: JSON.stringify({ pasteType: pasteType, hash: getHashCode(content) }),
-    })
-        .then(res => res.json())
-        .then()
-        .catch()
+    if (notifyEnabled) {
+        fetch(endpointNotify(culture), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                ApiKey: getApiKey(),
+                Config: getConfig(),
+            },
+            mode: 'cors',
+            cache: 'no-cache',
+            body: JSON.stringify({ pasteType: pasteType, hash: getHashCode(content) }),
+        })
+            .then(res => res.json())
+            .then()
+            .catch()
+    }
 }
 
 export function endpointClean(culture: string) {
@@ -56,11 +58,8 @@ export function endpointNotify(culture: string) {
 function getApiKey() {
     var scripts = document.getElementsByTagName('script')
     for (var i = 0; i < scripts.length; i++) {
-        if (scripts[i].src.indexOf('pasteitcleaned') > -1) {
-            var pa = scripts[i].src
-                .split('?')
-                .pop()
-                .split('&')
+        if (scripts[i].src.indexOf('pasteitapi') > -1) {
+            var pa = scripts[i].src.split('?').pop().split('&')
             var p = {}
 
             for (var j = 0; j < pa.length; j++) {
@@ -78,11 +77,8 @@ function getApiKey() {
 function getConfig() {
     var scripts = document.getElementsByTagName('script')
     for (var i = 0; i < scripts.length; i++) {
-        if (scripts[i].src.indexOf('pasteitcleaned') > -1) {
-            var pa = scripts[i].src
-                .split('?')
-                .pop()
-                .split('&')
+        if (scripts[i].src.indexOf('pasteitapi') > -1) {
+            var pa = scripts[i].src.split('?').pop().split('&')
             var p = {}
 
             for (var j = 0; j < pa.length; j++) {

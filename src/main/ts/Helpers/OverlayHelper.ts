@@ -1,51 +1,81 @@
 import * as textHelper from '../Helpers/TextHelper'
 
-let overlayDiv = document.createElement('div')
-let overlayDivAppended = false
-let overlayDivVisible = false
+let messageDiv = document.createElement('div')
+let messageDivAppended = false
+let messageDivVisible = false
 
-export const displayWaitingOverlay = (editor: any) => {
-    //var rect = editor.editorContainer.getBoundingClientRect()
-    var rect = document.querySelector('.tox.tox-tinymce').getBoundingClientRect()
-    var bodyRect = document.body.getBoundingClientRect()
-    var offsetTop = rect.top - bodyRect.top
-    var offsetLeft = rect.left - bodyRect.left
+export const displayProcessingMessage = (editor: any) => {
+    var processingIcon = 'https://cdn.pasteitapi.com/v1/loading.gif'
+    displayMessage(editor, processingIcon, 'editor.overlay.processing')
+}
 
-    var processing = textHelper.getText(editor, 'editor.overlay.processing')
-    var processingIcon = 'https://icon-library.net/images/spinner-icon-gif/spinner-icon-gif-24.jpg'
+export const displayMessage = (editor: any, icon: string, code: string) => {
+    var rectInner = getAbsoluteBoundingRect(editor.getContentAreaContainer())
+    var message = textHelper.getText(editor, code)
 
-    if (!overlayDivAppended) {
-        document.querySelector('body').appendChild(overlayDiv)
-        overlayDivAppended = true
+    if (!messageDivAppended) {
+        document.body.appendChild(messageDiv)
+        messageDivAppended = true
     }
 
-    overlayDiv.style.textAlign = 'center'
-    overlayDiv.style.verticalAlign = 'middle'
-    overlayDiv.style.display = 'none'
-    overlayDiv.style.position = 'absolute'
-    overlayDiv.style.backgroundColor = '#ffffff'
-    overlayDiv.style.zIndex = '4'
+    messageDiv.style.textAlign = 'center'
+    messageDiv.style.verticalAlign = 'middle'
+    messageDiv.style.display = 'none'
+    messageDiv.style.position = 'absolute'
+    messageDiv.style.backgroundColor = '#fafafa'
+    messageDiv.style.border = '1px solid #eeeeee'
+    messageDiv.style.borderRadius = '5px'
 
-    overlayDiv.style.top = offsetTop.toString() + 'px'
-    overlayDiv.style.left = offsetLeft.toString() + 'px'
-    //overlayDiv.style.right = rect.right.toString() + 'px'
-    //overlayDiv.style.bottom = rect.bottom.toString()
+    messageDiv.style.top = rectInner.top + 10 + 'px'
+    messageDiv.style.left = rectInner.left + 10 + 'px'
 
-    overlayDiv.style.width = (rect.right - rect.left).toString() + 'px'
-    overlayDiv.style.height = rect.height.toString() + 'px'
+    //messageDiv.style.width = rect.right - rect.left - 25 + 'px'
+    messageDiv.style.minHeight = '35px'
 
-    overlayDiv.style.opacity = '0.94'
+    messageDiv.innerHTML = `<table style='height: 100%; width: 100%;'><tr><td style='padding: 0 0 0 10px;'><img src='${icon}' style='height: 18px;' /></td><td style='vertical-align: middle; text-align: center; font-size: 16px; font-family: Arial, sans-serif; color: #555; font-weight: bold; margin: 0; padding: 5px 15px 5px 5px;'>${message}</td></tr></table>`
 
-    overlayDiv.innerHTML = `<table style='height: 100%; width: 100%;'><tr><td style='vertical-align: middle; text-align: center;'><span style='font-weight: bold; font-size: 18px; font-family: Arial, sans-serif; color: #000; margin: 0; padding: 0 0 20px 0; display: block;'>${processing}</span><img src='${processingIcon}' style='height: 250px;' /></td></tr></table>`
+    messageDiv.style.zIndex = (parseInt(editor.editorContainer.style.zIndex) + 1).toString()
 
-    overlayDivVisible = true
+    messageDivVisible = true
 
     setTimeout(() => {
-        if (overlayDivVisible === true) overlayDiv.style.display = 'block'
+        if (messageDivVisible === true) messageDiv.style.display = 'block'
     }, 1000)
 }
 
-export const hideWaitingOverlay = (editor: any) => {
-    overlayDiv.style.display = 'none'
-    overlayDivVisible = false
+export const hideMessage = (editor: any) => {
+    messageDiv.style.display = 'none'
+    messageDivVisible = false
+}
+
+function getAbsoluteBoundingRect(el) {
+    var doc = document,
+        win = window,
+        body = doc.body,
+        // pageXOffset and pageYOffset work everywhere except IE <9.
+        offsetX = win.pageXOffset !== undefined ? win.pageXOffset : ((doc.documentElement || body.parentNode || body) as any).scrollLeft,
+        offsetY = win.pageYOffset !== undefined ? win.pageYOffset : ((doc.documentElement || body.parentNode || body) as any).scrollTop,
+        rect = el.getBoundingClientRect()
+
+    if (el !== body) {
+        var parent = el.parentNode
+
+        // The element's rect will be affected by the scroll positions of
+        // *all* of its scrollable parents, not just the window, so we have
+        // to walk up the tree and collect every scroll offset. Good times.
+        while (parent !== body) {
+            offsetX += parent.scrollLeft
+            offsetY += parent.scrollTop
+            parent = parent.parentNode
+        }
+    }
+
+    return {
+        bottom: rect.bottom + offsetY,
+        height: rect.height,
+        left: rect.left + offsetX,
+        right: rect.right + offsetX,
+        top: rect.top + offsetY,
+        width: rect.width,
+    }
 }

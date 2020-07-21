@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>PasteItCleaned in TinyMCE demo page</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="https://cdn.tiny.cloud/1/YOUR_TINY_CLOUD_API_KEY/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+        <script src="https://cdn.pasteitapi.com/v1/plugin.min.js?apiKey=YOUR_PASTE_IT_APIK_KEY"></script>
+        <script>
+            tinymce.init({
+                selector: 'textarea',
+                plugins:
+                    'paste-it-cleaned-tiny source code print preview fullpage searchreplace autolink directionality visualblocks visualchars fullscreen image link media template codesample table charmap hr pagebreak nonbreaking anchor insertdatetime advlist lists textcolor wordcount imagetools contextmenu colorpicker textpattern',
+            })
+        </script>
+    </head>
+    <body>
+        <textarea class="tinymce" rows="50">
+            <p>Lobortis potenti urna leo gravida porttitor curae proin placerat tempus consequat lorem, sem dictumst imperdiet mattis velit congue maximus lectus egestas per orci, posuere dis semper varius ante senectus quisque pretium vivamus fringilla.</p>
+        </textarea>
+    </body>
+</html>
