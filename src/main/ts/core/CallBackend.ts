@@ -1,3 +1,5 @@
+import { fetch } from 'whatwg-fetch'
+
 import { backend, notifyEnabled } from '../../../configs/backend'
 
 export const callBackendClean = (html: string, rtf: string, keepStyles: boolean, culture: string, success: (html: string, exception: string) => void, error: () => void) => {

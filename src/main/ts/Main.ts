@@ -1,6 +1,8 @@
-import Plugin from './Plugin';
+import 'promise-polyfill/src/polyfill'
 
-Plugin();
+import Plugin from './Plugin'
+
+Plugin()
 
 /*******
  * DO NOT EXPORT ANYTHING

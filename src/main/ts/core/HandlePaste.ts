@@ -1,4 +1,3 @@
-import { window } from '@ephox/dom-globals'
 import { displayKeepStylesConfirm } from '../Helpers/ConfirmHelper'
 import { callBackendClean, callBackendNotify } from './CallBackend'
 import * as overlayHelper from '../Helpers/OverlayHelper'
@@ -6,6 +5,16 @@ import * as alertHelper from '../Helpers/AlertHelper'
 import * as textHelper from '../Helpers/TextHelper'
 
 const MAX_REQUEST_SIZE = 5 * 1024 * 1024 // 5 MB
+
+export const focusHiddenArea = div => {
+    div.innerHTML = ''
+    div.focus()
+}
+
+export const handleBeforePaste = (event: any, editor: any) => {
+    editor.lastIeHtmlPasted = ''
+    focusHiddenArea(editor.iePasteDiv)
+}
 
 export const handlePaste = (event: any, editor: any) => {
     cancelBubble(event)
@@ -15,9 +24,9 @@ export const handlePaste = (event: any, editor: any) => {
 }
 
 export const handlePasteHtmlRtf = (event: any, editor: any) => {
-    const htmlRaw = getHtmlFromClipboard(event)
-    const textRaw = getTextFromClipboard(event)
-    const rtfRaw = getRtfFromClipboard(event)
+    const htmlRaw = getHtmlFromClipboard(event, editor)
+    const textRaw = getTextFromClipboard(event, editor)
+    const rtfRaw = getRtfFromClipboard(event, editor)
     const culture = textHelper.getLocale(editor)
 
     if ((htmlRaw && textRaw != htmlRaw) || rtfRaw) {
@@ -53,21 +62,20 @@ export const handlePasteHtmlRtf = (event: any, editor: any) => {
 }
 
 export const handlePasteText = (event: any, editor: any) => {
-    const htmlRaw = getHtmlFromClipboard(event)
-    const textRaw = getTextFromClipboard(event)
-    const rtfRaw = getRtfFromClipboard(event)
+    const htmlRaw = getHtmlFromClipboard(event, editor)
+    const textRaw = getTextFromClipboard(event, editor)
+    const rtfRaw = getRtfFromClipboard(event, editor)
     const culture = textHelper.getLocale(editor)
 
     if (textRaw && (!htmlRaw || textRaw === htmlRaw) && (!rtfRaw || textRaw === rtfRaw)) {
-        //console.log(textRaw)
         replaceSelection(editor, textRaw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\r\n/g, '<br />').replace(/\r/g, '<br />').replace(/\n/g, '<br />'))
         callBackendNotify('text', textRaw, culture)
     }
 }
 
 export const handlePasteImage = (event: any, editor: any) => {
-    const htmlRaw = getHtmlFromClipboard(event)
-    const textRaw = getTextFromClipboard(event)
+    const htmlRaw = getHtmlFromClipboard(event, editor)
+    const textRaw = getTextFromClipboard(event, editor)
     const culture = textHelper.getLocale(editor)
 
     if (!htmlRaw && !textRaw) {
@@ -79,33 +87,48 @@ export const handlePasteImage = (event: any, editor: any) => {
 }
 
 const getClipboardData = (event: any) => {
-    console.log('event.clipboardData', event.clipboardData)
-    console.log('(window as any).clipboardData', (window as any).clipboardData)
     event.originalEvent && console.log('event.originalEvent.clipboardData', event.originalEvent.clipboardData)
     const data = event.clipboardData || (window as any).clipboardData || event.originalEvent.clipboardData
 
     return data
 }
 
-const getHtmlFromClipboard = (event: any) => {
+const getHtmlFromClipboard = (event: any, editor: any) => {
     const data = getClipboardData(event)
-    const pasteAsHtml = data.getData('text/html')
 
-    return pasteAsHtml
+    if (editor.lastIeHtmlPasted != '' && editor.lastIeHtmlPasted != undefined) {
+        return editor.lastIeHtmlPasted
+    }
+
+    try {
+        return data.getData('text/html') || ''
+    } catch {
+        return ''
+    }
 }
 
-const getTextFromClipboard = (event: any) => {
+const getTextFromClipboard = (event: any, editor: any) => {
     const data = getClipboardData(event)
-    const pasteAsText = data.getData('text')
 
-    return pasteAsText
+    try {
+        return data.getData('text') || ''
+    } catch {
+        try {
+            return data.getData('text/plain') || ''
+        } catch {
+            return ''
+        }
+    }
 }
 
-const getRtfFromClipboard = (event: any) => {
+const getRtfFromClipboard = (event: any, editor: any) => {
     const data = getClipboardData(event)
-    const pasteAsRtf = data.getData('text/rtf')
 
-    return pasteAsRtf
+    try {
+        return data.getData('text/rtf') || ''
+    } catch {
+        return ''
+    }
 }
 
 const getImageFromClipboard = (event: any, cb: (imgTag: string) => void) => {
