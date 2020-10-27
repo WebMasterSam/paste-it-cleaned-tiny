@@ -1,15 +1,17 @@
 import { fetch } from 'whatwg-fetch'
 
-import { backend, notifyEnabled } from '../../../configs/backend'
+import { backend } from '../../../configs/backend'
 
-export const callBackendClean = (html: string, rtf: string, keepStyles: boolean, culture: string, success: (html: string, exception: string) => void, error: () => void) => {
-    fetch(endpointClean(culture), {
+import * as paramHelper from '../Helpers/ParamHelper'
+
+export const callBackendClean = (editor: any, html: string, rtf: string, keepStyles: boolean, culture: string, success: (html: string, exception: string) => void, error: () => void) => {
+    fetch(endpointClean(editor, culture), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
-            ApiKey: getApiKey(),
-            Config: getConfig(),
+            ApiKey: getApiKey(editor),
+            Config: getConfig(editor),
         },
         mode: 'cors',
         cache: 'no-cache',
@@ -29,67 +31,73 @@ export const callBackendClean = (html: string, rtf: string, keepStyles: boolean,
         })
 }
 
-export const callBackendNotify = (pasteType: string, content: string, culture: string) => {
-    if (notifyEnabled) {
-        fetch(endpointNotify(culture), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-                ApiKey: getApiKey(),
-                Config: getConfig(),
-            },
-            mode: 'cors',
-            cache: 'no-cache',
-            body: JSON.stringify({ pasteType: pasteType, hash: getHashCode(content) }),
-        })
-            .then(res => res.json())
-            .then()
-            .catch()
+export const callBackendNotify = (editor: any, pasteType: string, content: string, culture: string) => {
+    fetch(endpointNotify(editor, culture), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            ApiKey: getApiKey(editor),
+            Config: getConfig(editor),
+        },
+        mode: 'cors',
+        cache: 'no-cache',
+        body: JSON.stringify({ pasteType: pasteType, hash: getHashCode(content) }),
+    })
+        .then(res => res.json())
+        .then()
+        .catch()
+}
+
+export function endpointClean(editor: any, culture: string) {
+    var endpoint = paramHelper.getParamValueOrDefault('endpoint', 'paste_it_cleaned_endpoint', editor, backend.endPoint)
+
+    if (endpoint == '/') {
+        endpoint = '' // When a "/" is used as the value, it means it's a relative path
     }
+
+    return endpoint + backend.clean + '?culture=' + culture
 }
 
-export function endpointClean(culture: string) {
-    return backend.endPointClean + '?culture=' + culture
+export function endpointNotify(editor: any, culture: string) {
+    var endpoint = paramHelper.getParamValueOrDefault('endpoint', 'paste_it_cleaned_endpoint', editor, backend.endPoint)
+
+    if (endpoint == '/') {
+        endpoint = '' // When a "/" is used as the value, it means it's a relative path
+    }
+
+    return endpoint + backend.notify + '?culture=' + culture
 }
 
-export function endpointNotify(culture: string) {
-    return backend.endPointNotify + '?culture=' + culture
-}
+function getApiKey(editor: any) {
+    var externalPluginValue = '' + paramHelper.getExternalPluginUrlParam(editor, 'apiKey')
+    var pluginValue = '' + paramHelper.getQueryStringParamValue('apiKey')
 
-function getApiKey() {
-    var scripts = document.getElementsByTagName('script')
-    for (var i = 0; i < scripts.length; i++) {
-        if (scripts[i].src.indexOf('pasteitapi') > -1) {
-            var pa = scripts[i].src.split('?').pop().split('&')
-            var p = {}
+    if (externalPluginValue != 'undefined' && externalPluginValue != undefined && externalPluginValue != null && externalPluginValue != '') {
+        console.debug('(ExternalPlugin) ' + 'ApiKey', externalPluginValue)
+        return externalPluginValue
+    }
 
-            for (var j = 0; j < pa.length; j++) {
-                var kv = pa[j].split('=')
-                p[kv[0]] = kv[1]
-            }
-
-            return p['apiKey']
-        }
+    if (pluginValue != 'undefined' && pluginValue != undefined && pluginValue != null && pluginValue != '') {
+        console.debug('(PluginScriptTag) ' + 'ApiKey', pluginValue)
+        return pluginValue
     }
 
     return ''
 }
 
-function getConfig() {
-    var scripts = document.getElementsByTagName('script')
-    for (var i = 0; i < scripts.length; i++) {
-        if (scripts[i].src.indexOf('pasteitapi') > -1) {
-            var pa = scripts[i].src.split('?').pop().split('&')
-            var p = {}
+function getConfig(editor: any) {
+    var externalPluginValue = paramHelper.getExternalPluginUrlParam(editor, 'config')
+    var pluginValue = paramHelper.getQueryStringParamValue('config')
 
-            for (var j = 0; j < pa.length; j++) {
-                var kv = pa[j].split('=')
-                p[kv[0]] = kv[1]
-            }
+    if (externalPluginValue != 'undefined' && externalPluginValue != undefined && externalPluginValue != null && externalPluginValue != '') {
+        console.debug('(ExternalPlugin) ' + 'Config', externalPluginValue)
+        return externalPluginValue
+    }
 
-            return p['config']
-        }
+    if (pluginValue != 'undefined' && pluginValue != undefined && pluginValue != null && pluginValue != '') {
+        console.debug('(PluginScriptTag) ' + 'Config', pluginValue)
+        return pluginValue
     }
 
     return ''

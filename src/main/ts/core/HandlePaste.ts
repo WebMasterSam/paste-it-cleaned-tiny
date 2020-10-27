@@ -3,6 +3,7 @@ import { callBackendClean, callBackendNotify } from './CallBackend'
 import * as overlayHelper from '../Helpers/OverlayHelper'
 import * as alertHelper from '../Helpers/AlertHelper'
 import * as textHelper from '../Helpers/TextHelper'
+import * as paramHelper from '../Helpers/ParamHelper'
 
 const MAX_REQUEST_SIZE = 5 * 1024 * 1024 // 5 MB
 
@@ -34,11 +35,12 @@ export const handlePasteHtmlRtf = (event: any, editor: any) => {
             alertHelper.displayRequestTooLongAlert(editor)
             console.error('Clipboard request size: ' + (rtfRaw.length + htmlRaw.length) + ' > ' + MAX_REQUEST_SIZE + ' (' + MAX_REQUEST_SIZE / 1024 / 1024 + 'MB)')
         } else {
-            console.log('Clipboard request size: ' + (rtfRaw.length + htmlRaw.length) / 1024 + 'KB')
+            console.debug('Clipboard request size: ' + (rtfRaw.length + htmlRaw.length) / 1024 + 'KB')
             displayKeepStylesConfirm(editor, (editor, keepStyles) => {
                 alertHelper.hideAlert(editor)
                 overlayHelper.displayProcessingMessage(editor)
                 cleanHtmlOnBackend(
+                    editor,
                     htmlRaw,
                     rtfRaw,
                     culture,
@@ -66,28 +68,39 @@ export const handlePasteText = (event: any, editor: any) => {
     const textRaw = getTextFromClipboard(event, editor)
     const rtfRaw = getRtfFromClipboard(event, editor)
     const culture = textHelper.getLocale(editor)
+    const hasNotify = paramHelper.getParamValueOrDefault('notify', 'paste_it_cleaned_notify', editor, 'true')
 
     if (textRaw && (!htmlRaw || textRaw === htmlRaw) && (!rtfRaw || textRaw === rtfRaw)) {
         replaceSelection(editor, textRaw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\r\n/g, '<br />').replace(/\r/g, '<br />').replace(/\n/g, '<br />'))
-        callBackendNotify('text', textRaw, culture)
+
+        if (hasNotify == 'true') {
+            callBackendNotify(editor, 'text', textRaw, culture)
+        }
     }
 }
 
 export const handlePasteImage = (event: any, editor: any) => {
-    const htmlRaw = getHtmlFromClipboard(event, editor)
-    const textRaw = getTextFromClipboard(event, editor)
-    const culture = textHelper.getLocale(editor)
+    const hasHandleImages = paramHelper.getParamValueOrDefault('handleImages', 'paste_it_cleaned_handle_images', editor, 'true')
 
-    if (!htmlRaw && !textRaw) {
-        getImageFromClipboard(event, imgTag => {
-            replaceSelection(editor, imgTag)
-            callBackendNotify('image', imgTag, culture)
-        })
+    if (hasHandleImages == 'true') {
+        const htmlRaw = getHtmlFromClipboard(event, editor)
+        const textRaw = getTextFromClipboard(event, editor)
+        const rtfRaw = getRtfFromClipboard(event, editor)
+        const culture = textHelper.getLocale(editor)
+        const hasNotify = paramHelper.getParamValueOrDefault('notify', 'paste_it_cleaned_notify', editor, 'true')
+
+        if (!htmlRaw && !rtfRaw && !textRaw) {
+            getImageFromClipboard(event, imgTag => {
+                replaceSelection(editor, imgTag)
+                if (hasNotify == 'true') {
+                    callBackendNotify(editor, 'image', imgTag, culture)
+                }
+            })
+        }
     }
 }
 
 const getClipboardData = (event: any) => {
-    event.originalEvent && console.log('event.originalEvent.clipboardData', event.originalEvent.clipboardData)
     const data = event.clipboardData || (window as any).clipboardData || event.originalEvent.clipboardData
 
     return data
@@ -153,8 +166,8 @@ const getImageFromClipboard = (event: any, cb: (imgTag: string) => void) => {
     }
 }
 
-const cleanHtmlOnBackend = (html: string, rtf: string, culture: string, keepStyles: boolean, success: (htmlCleaned: string, exception: string) => void, error: () => void) => {
-    return callBackendClean(html, rtf, keepStyles, culture, success, error)
+const cleanHtmlOnBackend = (editor: any, html: string, rtf: string, culture: string, keepStyles: boolean, success: (htmlCleaned: string, exception: string) => void, error: () => void) => {
+    return callBackendClean(editor, html, rtf, keepStyles, culture, success, error)
 }
 
 const replaceSelection = (editor: any, htmlCleaned: string) => {

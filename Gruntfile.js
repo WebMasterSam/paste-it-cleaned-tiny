@@ -74,8 +74,8 @@ module.exports = function (grunt) {
                 },
                 // scratchPluginMinPath is used twice on purpose, all outputs will be minified for premium plugins
                 files: {
-                    'dist/paste-it-cleaned-tiny/plugin.js': ['src/text/license-header.js', scratchPluginMinPath],
-                    'dist/paste-it-cleaned-tiny/plugin.min.js': ['src/text/license-header.js', scratchPluginMinPath],
+                    'dist/paste-it-cleaned-tiny/pasteitcleaned.js': ['src/text/license-header.js', scratchPluginMinPath],
+                    'dist/paste-it-cleaned-tiny/pasteitcleaned.min.js': ['src/text/license-header.js', scratchPluginMinPath],
                 },
             },
         },
